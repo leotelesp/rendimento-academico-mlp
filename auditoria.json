@@ -1,0 +1,12 @@
+{
+  "registros": 649,
+  "colunas": 33,
+  "ausentes": 0,
+  "duplicados": 0,
+  "aprovados": 549,
+  "reprovados": 100,
+  "treino": 389,
+  "validacao": 130,
+  "teste": 130,
+  "entradas": 18
+}

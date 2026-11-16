@@ -1,0 +1,5 @@
+nome,ativacao,taxa,melhor_epoca,epocas_executadas,perda_validacao
+relu_0.001,relu,0.001,22,37,0.3332647681236267
+relu_0.0003,relu,0.0003,52,67,0.333972692489624
+tanh_0.001,tanh,0.001,12,27,0.35671719908714294
+tanh_0.0003,tanh,0.0003,58,73,0.35462963581085205
