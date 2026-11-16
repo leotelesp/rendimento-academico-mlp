@@ -1,107 +1,105 @@
 # Predição do rendimento acadêmico com MLP
 
-Atividade 02 de Sistemas Inteligentes — professora Malga Costa.
+Trabalho da disciplina **Sistemas Inteligentes**, do curso de Ciência da Computação da Universidade Positivo.
 
-Projeto em Python para comparar redes com ReLU e Tanh na classificação da aprovação em Língua Portuguesa. Fonte: [Student Performance — UCI](https://archive.ics.uci.edu/dataset/320/student-performance), Paulo Cortez, DOI 10.24432/C5TG7T, licença CC BY 4.0.
+**Integrantes:** Leonardo Teles e Murilo dos Santos  
+**Professora:** Malga Costa
 
-## Situação do projeto
+## Objetivo
 
-Treinamento executado pelo grupo. Este pacote contém resultados reais, dados e relatório revisado. Nenhum repositório foi criado automaticamente. Para apenas regenerar o PDF, use atualizar_relatorio.py, sem repetir o treinamento.
+Comparar redes neurais multicamadas com as funções de ativação ReLU e Tanh na classificação da aprovação em Língua Portuguesa. O projeto utiliza informações do contexto escolar e familiar, sem incluir as notas dos períodos anteriores como entradas do modelo.
 
-## 1 Abrir no VS Code
+## Dataset
 
-Extraia o ZIP. No VS Code, use **Arquivo > Abrir Pasta** e selecione a pasta que contém este README. Instale a extensão **Python**, da Microsoft, se ainda não estiver instalada. Abra **Terminal > Novo Terminal**.
+Foi utilizado o arquivo `student-por.csv`, da base [Student Performance, da UCI](https://archive.ics.uci.edu/dataset/320/student-performance).
 
-Confira os interpretadores disponíveis:
+- 649 registros de estudantes de duas escolas portuguesas.
+- Dados coletados no ano letivo de 2005–2006.
+- 33 colunas no arquivo original e 12 atributos selecionados como entradas.
+- Nenhum valor ausente ou registro integralmente duplicado identificado.
+- Alvo: aprovação quando a nota final `G3` é maior ou igual a 10, na escala de 0 a 20.
+
+A base contém 549 aprovados e 100 reprovados. As variáveis `G1`, `G2` e o total de faltas não foram utilizadas como entradas. `G3` foi utilizada apenas para definir a classe.
+
+## Metodologia
+
+Os dados foram separados em treino, validação e teste, com estratificação e semente 42: 389 registros para treino, 130 para validação e 130 para teste. A padronização das variáveis numéricas e a codificação das categóricas foram ajustadas somente no treino.
+
+| Parâmetro | Configuração |
+| --- | --- |
+| Biblioteca | TensorFlow/Keras |
+| Camadas ocultas | 32, 16 e 8 neurônios |
+| Ativações comparadas | ReLU e Tanh |
+| Saída | Um neurônio com sigmoid |
+| Otimizador | Adam |
+| Taxas de aprendizado | 0,001 e 0,0003 |
+| Tamanho do lote | 32 |
+| Limite de épocas | 120 |
+| Parada antecipada | 15 épocas sem redução da perda de validação |
+| Função de perda | Entropia cruzada binária |
+
+A configuração foi escolhida pela menor perda na validação, com restauração dos pesos da melhor época. O teste foi utilizado somente para a avaliação final. Os vetores de erros por lote e os históricos por época estão registrados nos arquivos CSV.
+
+## Resultados
+
+Resultados no conjunto de teste para a melhor taxa de cada ativação:
+
+| Modelo | Acurácia | Acurácia balanceada | F1 macro | Recall da reprovação | ROC AUC |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| ReLU — taxa 0,001 | 83,08% | 51,14% | 0,4951 | 5,00% | 0,7209 |
+| Tanh — taxa 0,0003 | 80,00% | 55,45% | 0,5601 | 20,00% | 0,7268 |
+| Baseline majoritária | 84,62% | 50,00% | 0,4583 | 0,00% | 0,5000 |
+
+A ReLU com taxa 0,001 foi selecionada pela validação. Nenhuma rede superou a baseline em acurácia geral. Entretanto, a baseline sempre prevê aprovação e não identifica reprovados. Dos 20 reprovados no teste, a ReLU identificou 1 e a Tanh identificou 4.
+
+O desequilíbrio entre as classes limita a interpretação da acurácia isolada. Os resultados indicam dificuldade na identificação de estudantes reprovados e não justificam o uso do modelo para decisões automáticas. A amostra histórica, de apenas duas escolas portuguesas, também limita a generalização.
+
+![Curvas de perda e acurácia durante o treinamento](curvas.png)
+
+## Arquivos principais
+
+| Arquivo | Conteúdo |
+| --- | --- |
+| `rendimento_academico.py` | Preparação dos dados, treinamento e avaliação |
+| `atualizar_relatorio.py` | Geração do PDF a partir dos resultados salvos |
+| `requirements.txt` | Dependências do projeto |
+| `config.json` | Identificação usada no relatório |
+| `student-por.csv` | Dataset utilizado |
+| `student.txt` | Documentação original dos dados |
+| `metricas_teste.csv` | Métricas da avaliação final |
+| `comparacao_validacao.csv` | Comparação das quatro configurações |
+| `historico_*.csv` | Perda e acurácia por época |
+| `erros_*.csv` | Resíduos por amostra em cada lote |
+| `previsoes_*.csv` | Classes reais, probabilidades e previsões no teste |
+| `modelo_*.keras` | Modelos treinados |
+| `versoes.json` | Versões registradas na execução e modelo selecionado |
+| `Relatorio_Rendimento_Academico.pdf` | Relatório técnico com metodologia, resultados e discussão |
+
+## Execução
+
+No Windows, com Python instalado, crie um ambiente virtual na pasta do repositório e instale as dependências:
 
 ```powershell
-py -0p
-```
-
-Os comandos abaixo usam Python 3.11 de 64 bits; Python 3.12 também pode ser usado, substituindo `-3.11` por `-3.12`. Se nenhuma dessas versões estiver instalada, instale uma antes de continuar. Não é necessário desinstalar outras versões.
-
-## 2 Criar ambiente e instalar bibliotecas
-
-Execute um comando por vez, no terminal PowerShell da pasta do projeto:
-
-```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
+python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Esses comandos usam o Python do ambiente diretamente e dispensam ativação de scripts no PowerShell. A instalação do TensorFlow pode demorar. Não precisa configurar GPU.
-
-No VS Code, pressione **Ctrl+Shift+P**, escolha **Python: Select Interpreter** e selecione `.venv\Scripts\python.exe`.
-
-## 3 Identificar o grupo
-
-Edite `config.json`: preencha autores, instituição, curso e cidade. Mantenha aspas e vírgulas. O trabalho é em dupla ou trio. Esses dados serão colocados na capa do relatório.
-
-## 4 Executar
+Para executar um novo treinamento:
 
 ```powershell
 .\.venv\Scripts\python.exe rendimento_academico.py
 ```
 
-Os vetores de erros aparecerão no terminal a cada lote. Aguarde a mensagem `Concluído`. Fechar o terminal interrompe a execução.
+Essa execução baixa o dataset da UCI e grava os resultados na subpasta `entrega_rendimento`, além de gerar um ZIP. É necessária conexão com a internet para o download inicial.
 
-O programa cria `entrega_rendimento` e `Entrega_Rendimento_Academico.zip`, com:
-
-- CSV original e documentação da UCI, quando presente no pacote;
-- código e configuração do grupo;
-- divisão de treino, validação e teste;
-- parâmetros de padronização, modelos e pré-processamento;
-- histórico, vetores de erros e métricas;
-- gráficos e matrizes de confusão;
-- relatório em PDF gerado com resultados da execução.
-
-Se houver falha no download, verifique a conexão com a UCI. Se houver erro de instalação ou execução, copie a mensagem completa para diagnóstico. Não substitua métricas por números fictícios.
-
-## 5 Revisar o trabalho
-
-Abra o PDF gerado e confira todas as páginas, nomes, gráficos, quebras e texto. A formatação usa A4, margens 3/2 cm, Times 12 e entrelinhas 1,5; confira as exigências específicas da instituição antes da entrega.
-
-Período confirmado no artigo original de Cortez e Silva (2008): ano letivo de 2005–2006. A data de depósito da base na UCI é distinta da coleta. Os dados são de escolas portuguesas, históricos e não representam diretamente estudantes brasileiros atuais.
-
-Compare os modelos com a baseline majoritária, incluindo acurácia balanceada e recall da reprovação. O grupo deve compreender, revisar e adaptar o trabalho e seguir as regras da disciplina sobre assistência de IA.
-
-## 6 Enviar ao GitHub
-
-Crie um repositório vazio na sua conta, inicialmente privado se preferir. Não marque a criação de README, licença ou gitignore, pois os arquivos já estão nesta pasta. Substitua a URL abaixo pela URL real do repositório.
+Para gerar novamente o relatório usando os resultados já presentes na raiz do repositório, sem treinar as redes:
 
 ```powershell
-git init
-git add .
-git status
-git commit -m "Adiciona projeto de rendimento academico com MLP"
-git branch -M main
-git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
-git push -u origin main
+.\.venv\Scripts\python.exe atualizar_relatorio.py
 ```
 
-Revise `git status` antes do commit. O `.gitignore` evita enviar o ambiente virtual, arquivos temporários, modelos binários e os grandes registros de erros. Esses resultados continuam no ZIP de entrega. O CSV, o relatório e gráficos gerados podem ser versionados.
+## Referências
 
-Depois de executar e revisar os resultados:
+CORTEZ, Paulo; SILVA, Alice. *Using data mining to predict secondary school student performance*. Proceedings of the Fifth Annual Future Business Technology Conference. Porto: EUROSIS, 2008. p. 5–12.
 
-```powershell
-git add .
-git status
-git commit -m "Adiciona resultados do treinamento e relatorio"
-git push
-```
-
-Se o repositório for privado, a professora precisará de acesso. Não envie senha ou token no código. Não execute `git init` em outra pasta ou dentro de um repositório existente sem conferir sua estrutura.
-
-## Resumo da metodologia
-
-649 registros de Português; alvo `G3 >= 10`; 12 atributos de contexto; G1/G2 e faltas acumuladas excluídos. Divisão estratificada 60/20/20, semente 42. Padronização e one-hot ajustados somente no treino. Três camadas ocultas de 32, 16 e 8 neurônios; saída sigmoid. ReLU e Tanh, taxas 0,001 e 0,0003, Adam, batch 32, máximo 120 épocas, parada após 15 épocas sem melhora na validação. A seleção usa validação, nunca teste. Cada lote exibe e salva o vetor `y - probabilidade`; a função de perda otimizada é a entropia cruzada.
-
-Entrega prevista no enunciado: 18/11/2026. Entregar dataset, código e relatório técnico.
-
-
-## Relatório revisado
-
-O treinamento foi executado pelo grupo. Esta revisão preserva todos os resultados e acrescenta o período de coleta, a análise dos históricos e a discussão da classe minoritária. As referências foram reunidas.
-
-Para atualizar só o PDF nesta pasta, sem treinar novamente, execute com o Python do ambiente: `python atualizar_relatorio.py`. Mantenha os arquivos CSV, JSON e PNG ao lado desse script. No projeto principal, também é possível usar `python rendimento_academico.py --somente-relatorio` quando os resultados estiverem na subpasta `entrega_rendimento`.
+CORTEZ, Paulo. *Student Performance*. UCI Machine Learning Repository, 2008. DOI: [10.24432/C5TG7T](https://doi.org/10.24432/C5TG7T). Dataset disponibilizado sob licença CC BY 4.0.
